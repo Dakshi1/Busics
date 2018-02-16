@@ -38,18 +38,15 @@ public class MainActivity extends AppCompatActivity {
 
         pdfView =(PDFView) findViewById(R.id.pdfView);
 
-        File file = new File(Environment.getExternalStorageDirectory()+"/rj.pdf");
+//        File file = new File(Environment.getExternalStorageDirectory()+"/rj.pdf");
+//        Log.i("md", Environment.getExternalStorageDirectory()+"/rj.pdf");
+//        pdfView.fromFile(file).load();
 
-
-
-        Log.i("md", Environment.getExternalStorageDirectory()+"/rj.pdf");
-
-        pdfView.fromFile(file).load();
-
-        /*Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
+        Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
         intent.putExtra(FilePickerConstants.FILE, true);
         intent.putExtra(FilePickerConstants.TYPE, FilePickerConstants.MIME_PDF);
-        startActivityForResult(intent, MY_REQUEST_CODE);*/
+        startActivityForResult(intent, MY_REQUEST_CODE);
+
 
     }
 
@@ -62,7 +59,10 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, FilePickerUriHelper.getUriString(data), Toast.LENGTH_SHORT).show();
                 //If its not an image we don't load any of the image views
                 Log.d("path",FilePickerUriHelper.getUriString(data));
-                pdfView.fromUri(FilePickerUriHelper.getUri(data));
+//                pdfView.fromUri(FilePickerUriHelper.getUri(data)).load();
+//                pdfView.fromUri(Uri.fromFile(FilePickerUriHelper.getFile(this, data))).load();
+                File file = FilePickerUriHelper.getFile(MainActivity.this, data);
+                pdfView.fromFile(file).load();
                 //fileIv.setImageURI(Uri.fromFile(FilePickerUriHelper.getFile(this, data)));
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(MainActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
