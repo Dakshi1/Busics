@@ -12,15 +12,12 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
+import com.nbsp.materialfilepicker.MaterialFilePicker;
+import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
 import java.io.File;
 import java.util.ArrayList;
-
-import dk.nodes.filepicker.FilePickerActivity;
-import dk.nodes.filepicker.FilePickerConstants;
-import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
-
-import static dk.nodes.filepicker.FilePickerConstants.RESULT_CODE_FAILURE;
+import java.util.regex.Pattern;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,10 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         pdfView =(PDFView) findViewById(R.id.pdfView);
 
-        Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
-        intent.putExtra(FilePickerConstants.FILE, true);
-        intent.putExtra(FilePickerConstants.TYPE, FilePickerConstants.MIME_PDF);
-        startActivityForResult(intent, MY_REQUEST_CODE);
+
 
     }
 
@@ -48,18 +42,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == MY_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                Toast.makeText(MainActivity.this, FilePickerUriHelper.getUriString(data), Toast.LENGTH_SHORT).show();
-                //If its not an image we don't load any of the image views
-                Log.d("path",FilePickerUriHelper.getUriString(data));
-                pdfView.fromUri(FilePickerUriHelper.getUri(data));
-                //fileIv.setImageURI(Uri.fromFile(FilePickerUriHelper.getFile(this, data)));
-            } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(MainActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
-            } else if (resultCode == RESULT_CODE_FAILURE) {
-                Toast.makeText(MainActivity.this, "Failed", Toast.LENGTH_SHORT).show();
-            }
-        }
+
     }
 }
