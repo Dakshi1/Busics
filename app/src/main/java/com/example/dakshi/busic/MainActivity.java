@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,10 +38,18 @@ public class MainActivity extends AppCompatActivity {
 
         pdfView =(PDFView) findViewById(R.id.pdfView);
 
-        Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
+        File file = new File(Environment.getExternalStorageDirectory()+"/rj.pdf");
+
+
+
+        Log.i("md", Environment.getExternalStorageDirectory()+"/rj.pdf");
+
+        pdfView.fromFile(file).load();
+
+        /*Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
         intent.putExtra(FilePickerConstants.FILE, true);
         intent.putExtra(FilePickerConstants.TYPE, FilePickerConstants.MIME_PDF);
-        startActivityForResult(intent, MY_REQUEST_CODE);
+        startActivityForResult(intent, MY_REQUEST_CODE);*/
 
     }
 
