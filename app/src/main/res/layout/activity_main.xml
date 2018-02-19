@@ -12,6 +12,8 @@
         android:layout_height="match_parent"
         android:layout_above="@+id/select_file_button"
         android:layout_margin="5dp"
+        android:clickable="true"
+        android:focusable="auto"
         android:padding="5dp" />
 
     <Button
