@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/relView"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -18,13 +19,20 @@
         android:id="@+id/pdfView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/child_rel_view"
         android:layout_below="@+id/toolbar"
-
         android:layout_margin="5dp"
         android:clickable="true"
         android:focusable="auto"
         android:padding="5dp" />
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/child_rel_view"
+        android:layout_alignParentBottom="true">
+
+    </RelativeLayout>
 
 
 </RelativeLayout>

@@ -5,6 +5,8 @@ import android.content.Intent;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
@@ -17,6 +19,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
@@ -37,6 +40,7 @@ import java.util.ArrayList;
 import dk.nodes.filepicker.FilePickerActivity;
 import dk.nodes.filepicker.FilePickerConstants;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
+import nl.changer.audiowife.AudioWife;
 
 import static dk.nodes.filepicker.FilePickerConstants.RESULT_CODE_FAILURE;
 
@@ -54,12 +58,15 @@ public class MainActivity extends AppCompatActivity {
     int page_num;
     PdfReader reader;
     Toolbar tb;
-
+    RelativeLayout relativeLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        relativeLayout=findViewById(R.id.child_rel_view);
+
 
         //setting customized actionbar
         tb=findViewById(R.id.toolbar);
@@ -87,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
            // Toast.makeText(this, "not null", Toast.LENGTH_SHORT).show();
             load_pdf();
         }
-
+        // adding audio player
+        new LongOperation().execute("");
     }
 
     public void selectPdf()
@@ -228,5 +236,33 @@ public class MainActivity extends AppCompatActivity {
         }
         reader.close();
         super.onDestroy();
+    }
+
+    private class LongOperation extends AsyncTask<String, Void, String> {
+
+        Uri uri;
+        @Override
+        protected String doInBackground(String... params) {
+
+            /*AudioWife.getInstance().init(MainActivity.this, Uri.parse("https://dl.jatt.link/lq.jatt.link/cdn8/83cb553572dd8f1dfaf9f91b7dc2a0b9/bvlzv/Daru%20Badnaam-(Mr-Jatt.com).mp3"))
+                    .useDefaultUi(relativeLayout, getLayoutInflater());*/
+            //uri=Uri.parse("https://dl.jatt.link/lq.jatt.link/cdn8/83cb553572dd8f1dfaf9f91b7dc2a0b9/bvlzv/Daru%20Badnaam-(Mr-Jatt.com).mp3");
+            uri=Uri.parse("http://cdn.za.vc/download/48/124057/Raghupati%20Raghav%20Raja%20Ram%20Instrumental%20Piano%20Sawan%20Dutta,Ajay%20Prasanna%20-%20(IndianWap.Net).mp3");
+
+            return "Executed";
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+            AudioWife.getInstance().init(MainActivity.this, uri)
+                    .useDefaultUi(relativeLayout, getLayoutInflater());
+        }
+
+        @Override
+        protected void onPreExecute() {}
+
+        @Override
+        protected void onProgressUpdate(Void... values) {}
     }
 }
