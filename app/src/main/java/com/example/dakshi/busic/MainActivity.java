@@ -1,13 +1,20 @@
 package com.example.dakshi.busic;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -33,12 +40,11 @@ import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 
 import static dk.nodes.filepicker.FilePickerConstants.RESULT_CODE_FAILURE;
 
-
+@TargetApi(21)
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_REQUEST_CODE = 1317;
     PDFView pdfView;
-    Button select_file_button;
     String selected_file;
     String path;
     SharedPreferences preferences;
@@ -47,12 +53,19 @@ public class MainActivity extends AppCompatActivity {
     File file;
     int page_num;
     PdfReader reader;
+    Toolbar tb;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //setting customized actionbar
+        tb=findViewById(R.id.toolbar);
+        tb.setBackgroundColor(Color.BLUE);
+        tb.setTitle("Welcome to Busics");
+        setSupportActionBar(tb);
         // initializing main pdf view
         pdfView = findViewById(R.id.pdfView);
         preferences= PreferenceManager.getDefaultSharedPreferences(this);
@@ -71,17 +84,10 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Toast.makeText(this, "not null", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "not null", Toast.LENGTH_SHORT).show();
             load_pdf();
         }
-        // initializing select file button
-        select_file_button=findViewById(R.id.select_file_button);
-        select_file_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                selectPdf();
-            }
-        });
+
     }
 
     public void selectPdf()
@@ -97,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         pdfView.fromFile(file)
                 .defaultPage(page_num)
                 .enableDoubletap(true)
+                .enableAntialiasing(true)
                 .pageFitPolicy(FitPolicy.BOTH)
                 .onPageChange(new OnPageChangeListener() {
                     @Override
@@ -162,6 +169,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState)
     {
+        saveDatatoSP();
+        super.onSaveInstanceState(outState);
+    }
+
+    private void saveDatatoSP() {
+
         if(selected_file!=null)
         {
             preferences.edit().putString("path",path).apply();
@@ -169,12 +182,51 @@ public class MainActivity extends AppCompatActivity {
             preferences.edit().putInt("number",page_num).apply();
             //Toast.makeText(this, ""+preferences.getString("file_path",null)+"  "+preferences.getInt("number",1), Toast.LENGTH_SHORT).show();
         }
-        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        tb.inflateMenu(R.menu.app_menu);
+        tb.setOnMenuItemClickListener(
+                new Toolbar.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        return onOptionsItemSelected(item);
+                    }
+                });
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // action with ID action_refresh was selected
+            case R.id.action_choose:
+                selectPdf();
+                break;
+            // action with ID action_settings was selected
+            case R.id.action_close:
+                saveDatatoSP();
+                finish();
+                break;
+            default:
+                break;
+        }
+        return true;
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        if(selected_file!=null)
+        {
+            preferences.edit().putString("path",path).apply();
+            preferences.edit().putString("file",selected_file).apply();
+            preferences.edit().putInt("number",page_num).apply();
+            //Toast.makeText(this, ""+preferences.getString("file_path",null)+"  "+preferences.getInt("number",1), Toast.LENGTH_SHORT).show();
+        }
         reader.close();
+        super.onDestroy();
     }
 }

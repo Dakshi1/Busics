@@ -1,0 +1,10 @@
+<Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select File"
+        android:id="@+id/select_file_button"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"/>
+
+
+        android:layout_above="@+id/select_file_button"
