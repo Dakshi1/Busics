@@ -31,7 +31,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/child_rel_view"
         android:layout_alignParentBottom="true">
-
+        <include
+            layout="@layout/aw_player"/>
     </RelativeLayout>
 
 

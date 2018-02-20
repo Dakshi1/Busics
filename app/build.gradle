@@ -32,5 +32,4 @@ dependencies {
     compile 'com.tom_roush:pdfbox-android:1.8.9.1'
     compile 'com.itextpdf:itextg:5.5.10'
     compile 'net.the4thdimension:audio-wife:1.0.3'
-    compile 'com.github.iammert:RadioPlayerService:efe3b5420b'
 }

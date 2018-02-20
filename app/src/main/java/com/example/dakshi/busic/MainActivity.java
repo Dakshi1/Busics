@@ -1,10 +1,13 @@
 package com.example.dakshi.busic;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.PersistableBundle;
@@ -19,7 +22,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
@@ -58,12 +64,20 @@ public class MainActivity extends AppCompatActivity {
     int page_num;
     PdfReader reader;
     Toolbar tb;
+    ImageView play,pause;
+    TextView play_time;
+    SeekBar seekBar;
     RelativeLayout relativeLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        seekBar=findViewById(R.id.media_seekbar);
+        play_time=findViewById(R.id.playback_time);
+        play=findViewById(R.id.play);
+        pause=findViewById(R.id.pause);
 
         relativeLayout=findViewById(R.id.child_rel_view);
 
@@ -95,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
             load_pdf();
         }
         // adding audio player
-        new LongOperation().execute("");
+        //new LongOperation().execute("");
     }
 
     public void selectPdf()
@@ -219,6 +233,8 @@ public class MainActivity extends AppCompatActivity {
                 saveDatatoSP();
                 finish();
                 break;
+            case R.id.action_refresh:
+                new LongOperation().execute("");
             default:
                 break;
         }
@@ -241,28 +257,45 @@ public class MainActivity extends AppCompatActivity {
     private class LongOperation extends AsyncTask<String, Void, String> {
 
         Uri uri;
+        ProgressDialog p;
         @Override
         protected String doInBackground(String... params) {
 
             /*AudioWife.getInstance().init(MainActivity.this, Uri.parse("https://dl.jatt.link/lq.jatt.link/cdn8/83cb553572dd8f1dfaf9f91b7dc2a0b9/bvlzv/Daru%20Badnaam-(Mr-Jatt.com).mp3"))
                     .useDefaultUi(relativeLayout, getLayoutInflater());*/
             //uri=Uri.parse("https://dl.jatt.link/lq.jatt.link/cdn8/83cb553572dd8f1dfaf9f91b7dc2a0b9/bvlzv/Daru%20Badnaam-(Mr-Jatt.com).mp3");
-            uri=Uri.parse("http://cdn.za.vc/download/48/124057/Raghupati%20Raghav%20Raja%20Ram%20Instrumental%20Piano%20Sawan%20Dutta,Ajay%20Prasanna%20-%20(IndianWap.Net).mp3");
+            uri=Uri.parse("https://firebasestorage.googleapis.com/v0/b/socialhitch-85f9b.appspot.com/o/Raghupati%20Raghav%20Raja%20Ram%20Instrumental%20Piano-(Mr-Jatt.com).mp3?alt=media&token=1d2efe83-0088-41f7-85b0-d7537979b43e");
+            MediaPlayer mediaPlayer = new MediaPlayer();
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            try {
+            mediaPlayer.setDataSource("https://firebasestorage.googleapis.com/v0/b/socialhitch-85f9b.appspot.com/o/Raghupati%20Raghav%20Raja%20Ram%20Instrumental%20Piano-(Mr-Jatt.com).mp3?alt=media&token=1d2efe83-0088-41f7-85b0-d7537979b43e");
 
+                mediaPlayer.prepare(); // might take long! (for buffering, etc)
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mediaPlayer.start();
             return "Executed";
         }
 
         @Override
         protected void onPostExecute(String result) {
 
-            AudioWife.getInstance().init(MainActivity.this, uri)
-                    .useDefaultUi(relativeLayout, getLayoutInflater());
+            /*AudioWife.getInstance().init(MainActivity.this, uri)
+                    .useDefaultUi(relativeLayout, getLayoutInflater());*/
+            p.dismiss();
         }
 
         @Override
-        protected void onPreExecute() {}
+        protected void onPreExecute() {
+
+            p=new ProgressDialog(MainActivity.this);
+            p.show();
+        }
 
         @Override
-        protected void onProgressUpdate(Void... values) {}
+        protected void onProgressUpdate(Void... values) {
+            p.dismiss();
+        }
     }
 }
