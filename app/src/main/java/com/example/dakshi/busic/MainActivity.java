@@ -1,52 +1,56 @@
 package com.example.dakshi.busic;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.DefaultRenderersFactory;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
-import com.tom_roush.pdfbox.pdmodel.PDDocument;
-import com.tom_roush.pdfbox.pdmodel.PDPage;
+
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
+
 import dk.nodes.filepicker.FilePickerActivity;
 import dk.nodes.filepicker.FilePickerConstants;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
-import nl.changer.audiowife.AudioWife;
+
 
 import static dk.nodes.filepicker.FilePickerConstants.RESULT_CODE_FAILURE;
 
@@ -62,25 +66,28 @@ public class MainActivity extends AppCompatActivity {
     Type type;
     File file;
     int page_num;
+    int page_to_play_music=-1;
     PdfReader reader;
     Toolbar tb;
-    ImageView play,pause;
-    TextView play_time;
-    SeekBar seekBar;
-    RelativeLayout relativeLayout;
+    // exoplayer
+    static Context mcontext;
+    static ArrayList<String> m_audio_link;
+    static SimpleExoPlayerView playerView;
+    static SimpleExoPlayer player;
+    private static boolean playWhenReady=true;
+    static long playbackPosition=0;
+    static int currentWindow=0;
+    Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        seekBar=findViewById(R.id.media_seekbar);
-        play_time=findViewById(R.id.playback_time);
-        play=findViewById(R.id.play);
-        pause=findViewById(R.id.pause);
-
-        relativeLayout=findViewById(R.id.child_rel_view);
-
+        // initializing player
+        playerView=findViewById(R.id.video_view);
+        playerView.setControllerShowTimeoutMs(0);
+        playerView.setUseArtwork(false);
 
         //setting customized actionbar
         tb=findViewById(R.id.toolbar);
@@ -95,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         // retrieving saved file
         selected_file=preferences.getString("file",null);
         page_num=preferences.getInt("number",1);
+        page_to_play_music=preferences.getInt("play_from",-1);
         path=preferences.getString("path",null);
         // retrieve file object from file path
         if(selected_file!=null)
@@ -105,11 +113,8 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-           // Toast.makeText(this, "not null", Toast.LENGTH_SHORT).show();
             load_pdf();
         }
-        // adding audio player
-        //new LongOperation().execute("");
     }
 
     public void selectPdf()
@@ -119,6 +124,45 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(FilePickerConstants.TYPE, FilePickerConstants.MIME_PDF);
         page_num=0;
         startActivityForResult(intent, MY_REQUEST_CODE);
+    }
+    public static void initializePlayer(Context context, ArrayList<String> audio_link)
+    {
+        mcontext=context;
+        m_audio_link=audio_link;
+        player = ExoPlayerFactory.newSimpleInstance(
+                new DefaultRenderersFactory(context),
+                new DefaultTrackSelector(), new DefaultLoadControl());
+        playerView.setPlayer(player);
+        player.setPlayWhenReady(playWhenReady);
+        player.seekTo(currentWindow, playbackPosition);
+        MediaSource mediaSource = buildMediaSource(audio_link);
+        player.prepare(mediaSource, true, false);
+    }
+
+    private static MediaSource buildMediaSource(ArrayList<String> audio_link) {
+
+        ExtractorMediaSource audioSource[]=new ExtractorMediaSource[audio_link.size()];
+        Uri uri;
+        for(int i=0;i<audio_link.size();i++)
+        {
+            uri=Uri.parse(audio_link.get(i));
+            audioSource[i] =
+                    new ExtractorMediaSource.Factory(
+                            new DefaultHttpDataSourceFactory("exoplayer-codelab")).
+                            createMediaSource(uri);
+        }
+
+        return new ConcatenatingMediaSource(audioSource);
+    }
+
+    private void releasePlayer() {
+        if (player != null) {
+            playbackPosition = player.getCurrentPosition();
+            currentWindow = player.getCurrentWindowIndex();
+            playWhenReady = player.getPlayWhenReady();
+            player.release();
+            player = null;
+        }
     }
     public void load_pdf()
     {
@@ -132,7 +176,10 @@ public class MainActivity extends AppCompatActivity {
                     public void onPageChanged(int page, int pageCount)
                     {
                         page_num=page;
-                        pdfToString();
+                        if(page_to_play_music!=-1) {
+                            pdfToString();
+                            releasePlayer();
+                        }
                         //Toast.makeText(MainActivity.this, ""+page+" "+pageCount, Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -172,11 +219,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        //super.onConfigurationChanged(newConfig);
+
+    }
+
     public void pdfToString()
     {
+
+        final int page=page_num;
+        String parsedText="";
         try {
-            String parsedText="";
-            for (int i = 0; i <1 ; i++) {
+
+            for (int i = page; i <page+1 ; i++) {
                 parsedText   = parsedText+ PdfTextExtractor.getTextFromPage(reader, page_num+1).trim()+"\n"; //Extracting the content from the different pages
             }
             Log.d("Text of document",parsedText);
@@ -186,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             System.out.println(e);
         }
+        sendText(parsedText);
     }
 
     @Override
@@ -202,6 +259,7 @@ public class MainActivity extends AppCompatActivity {
             preferences.edit().putString("path",path).apply();
             preferences.edit().putString("file",selected_file).apply();
             preferences.edit().putInt("number",page_num).apply();
+            preferences.edit().putInt("play_from",page_to_play_music).apply();
             //Toast.makeText(this, ""+preferences.getString("file_path",null)+"  "+preferences.getInt("number",1), Toast.LENGTH_SHORT).show();
         }
     }
@@ -234,11 +292,27 @@ public class MainActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.action_refresh:
-                new LongOperation().execute("");
+                if(page_to_play_music==-1)
+                {
+                    if (Util.SDK_INT > 23 ) {
+                        //initializePlayer(mcontext,m_audio_link);
+                        pdfToString();
+
+                    }
+                    page_to_play_music=page_num;
+                }
+                else
+                    Toast.makeText(this, "Document already analysed", Toast.LENGTH_SHORT).show();
             default:
                 break;
         }
         return true;
+    }
+
+    private void sendText(String text) {
+
+        Toast.makeText(MainActivity.this, "sendText", Toast.LENGTH_SHORT).show();
+        new ClassifyText(MainActivity.this).execute(text);
     }
 
     @Override
@@ -248,54 +322,43 @@ public class MainActivity extends AppCompatActivity {
             preferences.edit().putString("path",path).apply();
             preferences.edit().putString("file",selected_file).apply();
             preferences.edit().putInt("number",page_num).apply();
+            preferences.edit().putInt("play_from",page_to_play_music).apply();
             //Toast.makeText(this, ""+preferences.getString("file_path",null)+"  "+preferences.getInt("number",1), Toast.LENGTH_SHORT).show();
         }
         reader.close();
         super.onDestroy();
     }
 
-    private class LongOperation extends AsyncTask<String, Void, String> {
-
-        Uri uri;
-        ProgressDialog p;
-        @Override
-        protected String doInBackground(String... params) {
-
-            /*AudioWife.getInstance().init(MainActivity.this, Uri.parse("https://dl.jatt.link/lq.jatt.link/cdn8/83cb553572dd8f1dfaf9f91b7dc2a0b9/bvlzv/Daru%20Badnaam-(Mr-Jatt.com).mp3"))
-                    .useDefaultUi(relativeLayout, getLayoutInflater());*/
-            //uri=Uri.parse("https://dl.jatt.link/lq.jatt.link/cdn8/83cb553572dd8f1dfaf9f91b7dc2a0b9/bvlzv/Daru%20Badnaam-(Mr-Jatt.com).mp3");
-            uri=Uri.parse("https://firebasestorage.googleapis.com/v0/b/socialhitch-85f9b.appspot.com/o/Raghupati%20Raghav%20Raja%20Ram%20Instrumental%20Piano-(Mr-Jatt.com).mp3?alt=media&token=1d2efe83-0088-41f7-85b0-d7537979b43e");
-            MediaPlayer mediaPlayer = new MediaPlayer();
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            try {
-            mediaPlayer.setDataSource("https://firebasestorage.googleapis.com/v0/b/socialhitch-85f9b.appspot.com/o/Raghupati%20Raghav%20Raja%20Ram%20Instrumental%20Piano-(Mr-Jatt.com).mp3?alt=media&token=1d2efe83-0088-41f7-85b0-d7537979b43e");
-
-                mediaPlayer.prepare(); // might take long! (for buffering, etc)
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            mediaPlayer.start();
-            return "Executed";
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (Util.SDK_INT <= 23) {
+            releasePlayer();
         }
+    }
 
-        @Override
-        protected void onPostExecute(String result) {
-
-            /*AudioWife.getInstance().init(MainActivity.this, uri)
-                    .useDefaultUi(relativeLayout, getLayoutInflater());*/
-            p.dismiss();
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (Util.SDK_INT > 23) {
+            releasePlayer();
         }
+    }
 
-        @Override
-        protected void onPreExecute() {
-
-            p=new ProgressDialog(MainActivity.this);
-            p.show();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if ((Util.SDK_INT <= 23 || player == null) && mcontext!=null) {
+            initializePlayer(mcontext, m_audio_link);
         }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-            p.dismiss();
-        }
+    }
+    @SuppressLint("InlinedApi")
+    private void hideSystemUi() {
+        playerView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
     }
 }

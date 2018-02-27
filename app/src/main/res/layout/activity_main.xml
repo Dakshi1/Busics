@@ -31,8 +31,11 @@
         android:layout_height="wrap_content"
         android:id="@+id/child_rel_view"
         android:layout_alignParentBottom="true">
-        <include
-            layout="@layout/aw_player"/>
+        <com.google.android.exoplayer2.ui.SimpleExoPlayerView
+
+            android:id="@+id/video_view"
+            android:layout_width="match_parent"
+            android:layout_height="50dp" />
     </RelativeLayout>
 
 
