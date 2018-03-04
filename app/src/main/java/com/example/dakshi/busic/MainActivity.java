@@ -2,6 +2,7 @@ package com.example.dakshi.busic;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -18,7 +19,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
@@ -66,23 +69,25 @@ public class MainActivity extends AppCompatActivity {
     Type type;
     File file;
     int page_num;
+    MenuItem menuItem;
     int page_to_play_music=-1;
     PdfReader reader;
     Toolbar tb;
+    ProgressBar progressBar;
     // exoplayer
-    static Context mcontext;
-    static ArrayList<String> m_audio_link;
     static SimpleExoPlayerView playerView;
     static SimpleExoPlayer player;
-    private static boolean playWhenReady=true;
+    static boolean playWhenReady=true;
     static long playbackPosition=0;
     static int currentWindow=0;
-    Button button;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        music_player mplyr= new music_player(MainActivity.this);
 
         // initializing player
         playerView=findViewById(R.id.video_view);
@@ -96,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(tb);
         // initializing main pdf view
         pdfView = findViewById(R.id.pdfView);
+
         preferences= PreferenceManager.getDefaultSharedPreferences(this);
         gson=new Gson();
         type=new TypeToken<File>(){}.getType();
@@ -103,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
         selected_file=preferences.getString("file",null);
         page_num=preferences.getInt("number",1);
         page_to_play_music=preferences.getInt("play_from",-1);
+        Log.d("play_from",page_num+" "+page_to_play_music);
         path=preferences.getString("path",null);
         // retrieve file object from file path
         if(selected_file!=null)
@@ -125,62 +132,24 @@ public class MainActivity extends AppCompatActivity {
         page_num=0;
         startActivityForResult(intent, MY_REQUEST_CODE);
     }
-    public static void initializePlayer(Context context, ArrayList<String> audio_link)
-    {
-        mcontext=context;
-        m_audio_link=audio_link;
-        player = ExoPlayerFactory.newSimpleInstance(
-                new DefaultRenderersFactory(context),
-                new DefaultTrackSelector(), new DefaultLoadControl());
-        playerView.setPlayer(player);
-        player.setPlayWhenReady(playWhenReady);
-        player.seekTo(currentWindow, playbackPosition);
-        MediaSource mediaSource = buildMediaSource(audio_link);
-        player.prepare(mediaSource, true, false);
-    }
-
-    private static MediaSource buildMediaSource(ArrayList<String> audio_link) {
-
-        ExtractorMediaSource audioSource[]=new ExtractorMediaSource[audio_link.size()];
-        Uri uri;
-        for(int i=0;i<audio_link.size();i++)
-        {
-            uri=Uri.parse(audio_link.get(i));
-            audioSource[i] =
-                    new ExtractorMediaSource.Factory(
-                            new DefaultHttpDataSourceFactory("exoplayer-codelab")).
-                            createMediaSource(uri);
-        }
-
-        return new ConcatenatingMediaSource(audioSource);
-    }
-
-    private void releasePlayer() {
-        if (player != null) {
-            playbackPosition = player.getCurrentPosition();
-            currentWindow = player.getCurrentWindowIndex();
-            playWhenReady = player.getPlayWhenReady();
-            player.release();
-            player = null;
-        }
-    }
     public void load_pdf()
     {
         pdfView.fromFile(file)
                 .defaultPage(page_num)
                 .enableDoubletap(true)
-                .enableAntialiasing(true)
-                .pageFitPolicy(FitPolicy.BOTH)
+                .pageFitPolicy(FitPolicy.WIDTH)
                 .onPageChange(new OnPageChangeListener() {
                     @Override
                     public void onPageChanged(int page, int pageCount)
                     {
+                        //Toast.makeText(MainActivity.this, "page changed "+page_to_play_music, Toast.LENGTH_SHORT).show();
                         page_num=page;
-                        if(page_to_play_music!=-1) {
+                        if(page_to_play_music!=-1 && page_num>=page_to_play_music) {
+                            menuItem.setActionView(R.layout.progress);
+                            Toast.makeText(MainActivity.this, "page 1 changed", Toast.LENGTH_SHORT).show();
+                            music_player.releasePlayer();
                             pdfToString();
-                            releasePlayer();
                         }
-                        //Toast.makeText(MainActivity.this, ""+page+" "+pageCount, Toast.LENGTH_SHORT).show();
                     }
                 })
                 .load();
@@ -203,6 +172,9 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 //selected_file=FilePickerUriHelper.getUriString(data);
+                music_player.releasePlayer();
+                page_to_play_music=-1;
+                music_player.m_audio_link=null;
                 file = FilePickerUriHelper.getFile(MainActivity.this, data);
                 selected_file=gson.toJson(file,type);
                 load_pdf();
@@ -227,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void pdfToString()
     {
-
         final int page=page_num;
         String parsedText="";
         try {
@@ -235,10 +206,6 @@ public class MainActivity extends AppCompatActivity {
             for (int i = page; i <page+1 ; i++) {
                 parsedText   = parsedText+ PdfTextExtractor.getTextFromPage(reader, page_num+1).trim()+"\n"; //Extracting the content from the different pages
             }
-            Log.d("Text of document",parsedText);
-            //Toast.makeText(this, ""+parsedText, Toast.LENGTH_SHORT).show();
-            //System.out.println(parsedText);
-            //reader.close();
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -260,12 +227,12 @@ public class MainActivity extends AppCompatActivity {
             preferences.edit().putString("file",selected_file).apply();
             preferences.edit().putInt("number",page_num).apply();
             preferences.edit().putInt("play_from",page_to_play_music).apply();
-            //Toast.makeText(this, ""+preferences.getString("file_path",null)+"  "+preferences.getInt("number",1), Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
 
         tb.inflateMenu(R.menu.app_menu);
         tb.setOnMenuItemClickListener(
@@ -275,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
                         return onOptionsItemSelected(item);
                     }
                 });
-
+        menuItem=menu.findItem(R.id.action_refresh);
         return true;
     }
 
@@ -292,17 +259,22 @@ public class MainActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.action_refresh:
-                if(page_to_play_music==-1)
+                /*if(page_to_play_music==-1)
                 {
                     if (Util.SDK_INT > 23 ) {
                         //initializePlayer(mcontext,m_audio_link);
                         pdfToString();
-
                     }
                     page_to_play_music=page_num;
                 }
                 else
-                    Toast.makeText(this, "Document already analysed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Document already analysed", Toast.LENGTH_SHORT).show();*/
+                if (Util.SDK_INT > 23 ) {
+                    //initializePlayer(mcontext,m_audio_link);
+                    item.setActionView(R.layout.progress);
+                    pdfToString();
+                    page_to_play_music=page_num;
+                }
             default:
                 break;
         }
@@ -312,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
     private void sendText(String text) {
 
         Toast.makeText(MainActivity.this, "sendText", Toast.LENGTH_SHORT).show();
-        new ClassifyText(MainActivity.this).execute(text);
+        new ClassifyText(MainActivity.this,menuItem).execute(text);
     }
 
     @Override
@@ -333,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (Util.SDK_INT <= 23) {
-            releasePlayer();
+            music_player.releasePlayer();
         }
     }
 
@@ -341,15 +313,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (Util.SDK_INT > 23) {
-            releasePlayer();
+            music_player.releasePlayer();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if ((Util.SDK_INT <= 23 || player == null) && mcontext!=null) {
-            initializePlayer(mcontext, m_audio_link);
+        if ((Util.SDK_INT <= 23 || player == null) && music_player.mcontext!=null) {
+            music_player.initializePlayer();
         }
     }
     @SuppressLint("InlinedApi")

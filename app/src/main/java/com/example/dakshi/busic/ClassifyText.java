@@ -2,8 +2,12 @@ package com.example.dakshi.busic;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
@@ -21,22 +25,19 @@ import org.json.JSONObject;
 
 public class ClassifyText extends AsyncTask<String, Void, String> {
 
-    private ProgressDialog progressDialog;
+    MenuItem menuItem;
     Context context;
     String query="";
-    ClassifyText(Context context)
+    ClassifyText(Context context, MenuItem menuItem)
     {
         this.context=context;
+        this.menuItem=menuItem;
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressDialog=new ProgressDialog(context);
-        progressDialog.setTitle("Analyzing Text");
-        progressDialog.setCancelable(false);
-        progressDialog.setCanceledOnTouchOutside(false);
-        progressDialog.show();
+
     }
 
     @Override
@@ -44,6 +45,8 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
 
         Log.d("text to classify",strings[0]);
         String url = "http://api.meaningcloud.com/class-1.1?key=2943dd044c63d6125b8f02ed76803e43&txt="+strings[0]+"&model=IPTC_en";
+        url = url.replaceAll(" ", "%20");
+        url = url.replaceAll("\n", "%20");
         StringRequest stringRequest=new StringRequest(url, new com.android.volley.Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -83,8 +86,9 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
         Log.d("qqqqqqqqqqqq",c);
         c =c.replaceAll("[ ](?=[ ])|[^_+,A-Za-z0-9 ]+", "");
         c =c.replaceAll("\\band\\b\\s*", "");
-        Log.d("qqqqqqqqqqqq",c);
         Toast.makeText(context, ""+c, Toast.LENGTH_SHORT).show();
-        new FetchMusic(context, progressDialog, c).execute();
+        c=c.replaceAll(" ","%20");
+        c=c.replaceAll("\n","%20");
+        new FetchMusic(context, c, menuItem).execute();
     }
 }

@@ -4,6 +4,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -24,17 +27,17 @@ import java.util.ArrayList;
 
 public class FetchMusic extends AsyncTask<String, Void, String> {
 
-    ProgressDialog progressDialog;
+    MenuItem menuItem;
     Context context;
     String url="";
     private ArrayList<String> audio_link;
 
-    FetchMusic(Context context, ProgressDialog progressDialog, String query)
+    FetchMusic(Context context, String query, MenuItem menuItem)
     {
         audio_link=new ArrayList<>();
+        this.menuItem=menuItem;
         this.url="https://api.jamendo.com/v3.0/tracks/?client_id=d7a35ef5&format=json&fuzzytags="+query+"&vocalinstrumental=instrumental";
         this.context=context;
-        this.progressDialog=progressDialog;
     }
 
     @Override
@@ -84,12 +87,12 @@ public class FetchMusic extends AsyncTask<String, Void, String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        progressDialog.dismiss();
-
+        menuItem.setActionView(null);
     }
 
     private void music_url() {
 
-        MainActivity.initializePlayer(context,audio_link);
+        music_player mplayer= new music_player(context,audio_link);
+        mplayer.initializePlayer();
     }
 }
