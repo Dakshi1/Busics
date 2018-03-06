@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context="com.example.dakshi.busic.MainActivity">
 
+
     <android.support.v7.widget.Toolbar
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/toolbar"
@@ -26,16 +27,19 @@
         android:layout_margin="5dp"
         android:clickable="true"
         android:focusable="auto"
+        android:visibility="invisible"
         android:padding="5dp" />
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
+        android:background="@drawable/color"
         android:id="@+id/child_rel_view"
         android:layout_alignParentBottom="true">
         <com.google.android.exoplayer2.ui.SimpleExoPlayerView
 
             android:id="@+id/video_view"
+            app:controller_layout_id="@layout/sample_player"
             android:layout_width="match_parent"
             android:layout_height="50dp" />
     </RelativeLayout>

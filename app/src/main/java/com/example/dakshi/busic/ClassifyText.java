@@ -43,7 +43,6 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
     @Override
     protected String doInBackground(String... strings) {
 
-        Log.d("text to classify",strings[0]);
         String url = "http://api.meaningcloud.com/class-1.1?key=2943dd044c63d6125b8f02ed76803e43&txt="+strings[0]+"&model=IPTC_en";
         url = url.replaceAll(" ", "%20");
         url = url.replaceAll("\n", "%20");
@@ -66,6 +65,7 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
                     Log.d("q",query);
                     printmyquery(query);
                 } catch (JSONException e) {
+                    menuItem.setActionView(null);
                     e.printStackTrace();
                 }
             }
@@ -86,7 +86,7 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
         Log.d("qqqqqqqqqqqq",c);
         c =c.replaceAll("[ ](?=[ ])|[^_+,A-Za-z0-9 ]+", "");
         c =c.replaceAll("\\band\\b\\s*", "");
-        Toast.makeText(context, ""+c, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(context, ""+c, Toast.LENGTH_SHORT).show();
         c=c.replaceAll(" ","%20");
         c=c.replaceAll("\n","%20");
         new FetchMusic(context, c, menuItem).execute();

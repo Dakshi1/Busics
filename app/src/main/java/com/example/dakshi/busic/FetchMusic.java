@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -92,7 +93,11 @@ public class FetchMusic extends AsyncTask<String, Void, String> {
 
     private void music_url() {
 
-        music_player mplayer= new music_player(context,audio_link);
-        mplayer.initializePlayer();
+        if(MainActivity.check()) {
+            music_player mplayer = new music_player(context, audio_link);
+            mplayer.initializePlayer();
+        }
+        else
+            Toast.makeText(context, "Action requires Internet Connection", Toast.LENGTH_SHORT).show();
     }
 }
