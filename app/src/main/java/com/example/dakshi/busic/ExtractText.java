@@ -42,6 +42,7 @@ public class ExtractText extends AsyncTask<String, Void, String> {
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
         analysed=true;
+        MainActivity.check_n_play();
         Toast.makeText(context, "Document completely analysed, Enjoy!!! ", Toast.LENGTH_SHORT).show();
     }
 }

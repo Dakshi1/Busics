@@ -2,63 +2,35 @@ package com.example.dakshi.busic;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.Color;
-import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
-
-
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.InetAddress;
 import java.util.ArrayList;
 
 
@@ -81,9 +53,9 @@ public class MainActivity extends AppCompatActivity{
     Gson gson;
     Type type;
     File file;
-    int page_num;
-    MenuItem menuItem;
-    int page_to_play_music=-1;
+    static int page_num;
+    static MenuItem menuItem;
+    static int page_to_play_music=-1;
     Toolbar tb;
     // exoplayer
     static SimpleExoPlayerView playerView;
@@ -91,14 +63,16 @@ public class MainActivity extends AppCompatActivity{
     static boolean playWhenReady=true;
     static long playbackPosition=0;
     static int currentWindow=0;
-    Handler handler;
-    Runnable runnable;
+    static Handler handler;
+    static Runnable runnable;
+    static Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        context=MainActivity.this;
         handler=new Handler();
 
         music_player mplyr= new music_player(MainActivity.this, new ArrayList<String>());
@@ -128,7 +102,6 @@ public class MainActivity extends AppCompatActivity{
         // retrieve file object from file path
         if(selected_file!=null)
         {
-            Toast.makeText(this, "inside shared pref", Toast.LENGTH_SHORT).show();
             new ExtractText(path,this).execute();
             file=gson.fromJson(selected_file,type);
             load_pdf();
@@ -157,26 +130,7 @@ public class MainActivity extends AppCompatActivity{
                     {
                         if(runnable!=null)
                             handler.removeCallbacks(runnable);
-                        if(page_to_play_music!=-1 && page_num>=page_to_play_music && isConnected()) {
-
-                            if (ExtractText.analysed) {
-                                runnable = new Runnable() {
-                                    @Override
-                                    public void run() {
-
-
-                                        menuItem.setActionView(R.layout.progress);
-                                        music_player.releasePlayer();
-                                        music_player.m_audio_link = null;
-                                        pdfToString();
-                                    }
-
-                                };
-                                handler.postDelayed(runnable, SPLASH_TIME_OUT);
-                            }
-                            else
-                                Toast.makeText(MainActivity.this, "Document analysis in process...", Toast.LENGTH_SHORT).show();
-                        }
+                        check_n_play();
                         page_num = page;
                     }
                 })
@@ -224,8 +178,35 @@ public class MainActivity extends AppCompatActivity{
         }
 
     }
+    public static void getResponse()
+    {
 
-    public void pdfToString()
+    }
+
+    public static void check_n_play()
+    {
+        if(page_to_play_music!=-1 && page_num>=page_to_play_music && check())
+        {
+
+            if (ExtractText.analysed)
+            {
+                runnable = new Runnable() {
+                    @Override
+                    public void run() {
+
+                        //Toast.makeText(MainActivity.this, "called", Toast.LENGTH_SHORT).show();
+                        menuItem.setActionView(R.layout.progress);
+                        music_player.releasePlayer();
+                        music_player.m_audio_link = null;
+                        pdfToString();
+                    }
+
+                };
+                handler.postDelayed(runnable, SPLASH_TIME_OUT);
+            }
+        }
+    }
+    public static void pdfToString()
     {
         String parsedText="";
         try {
@@ -285,14 +266,19 @@ public class MainActivity extends AppCompatActivity{
                 break;
             case R.id.action_refresh:
 
-                if(isConnected())
+                if(check())
                 {
                     if(ExtractText.analysed)
                     {
                         if(file!=null) {
-                            item.setActionView(R.layout.progress);
-                            pdfToString();
-                            page_to_play_music = page_num;
+                            if(page_to_play_music==-1) {
+                                item.setActionView(R.layout.progress);
+                                music_player.releasePlayer();
+                                music_player.m_audio_link = null;
+                                pdfToString();
+                                page_to_play_music = page_num;
+                            }
+                            Toast.makeText(this, "Page to play music is already set, to modify it again load the document ", Toast.LENGTH_SHORT).show();
                         }
                         else
                             Toast.makeText(this, "Load a pdf...", Toast.LENGTH_SHORT).show();
@@ -309,12 +295,12 @@ public class MainActivity extends AppCompatActivity{
     }
 
 
-    private void sendText(String text) {
+    private static void sendText(String text) {
 
-        if(isConnected())
-            new ClassifyText(MainActivity.this,menuItem).execute(text);
+        if(check())
+            new ClassifyText(context,menuItem).execute(text);
         else
-            Toast.makeText(this, "Action requires Internet Connection", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Action requires Internet Connection", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -366,23 +352,18 @@ public class MainActivity extends AppCompatActivity{
     }
 
 
-    public boolean isConnected() {
+
+
+    public static boolean check() {
         ConnectivityManager
                 cm;
-        cm = (ConnectivityManager)getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        Context xcontext=music_player.mcontext;
+        cm = (ConnectivityManager)xcontext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null
                 && activeNetwork.isConnectedOrConnecting();
     }
 
-    public static boolean check() {
-        ConnectivityManager
-                cm;
-        Context context=music_player.mcontext;
-        cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null
-                && activeNetwork.isConnectedOrConnecting();
-    }
+
 
 }
