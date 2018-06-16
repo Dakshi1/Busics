@@ -19,6 +19,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 /**
  * Created by dakshi on 27/2/18.
  */
@@ -28,10 +30,13 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
     MenuItem menuItem;
     Context context;
     String query="";
+    String[] arr;
+    ArrayList<String> temp;
     ClassifyText(Context context, MenuItem menuItem)
     {
         this.context=context;
         this.menuItem=menuItem;
+        temp=new ArrayList<>();
     }
 
     @Override
@@ -57,12 +62,24 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
                     for(int i=0;i<category.length();i++)
                     {
                         JSONObject object=category.getJSONObject(i);
-                        query=query+object.getString("label");
-                        if(i!=category.length()-1)
-                            query=query+"+";
+                        String category_code=object.getString("code").substring(0,2);
+                        String relevance=object.getString("relevance");
+
+                        arr=(object.getString("label")).split("-");
+                        if(arr.length>1 && arr[1]!=null)
+                            Log.d("category_sub", arr[1]);
+                        if(arr.length>1 && category_code!=null && !temp.contains(category_code))
+                        {
+                            temp.add(category_code);
+                            query=query+arr[1];
+                            if(i!=category.length()-1)
+                                query+="+";
+                            Log.d("category_code", temp.get(temp.size()-1));
+                            Log.d("category_relevance",relevance);
+
+                        }
 
                     }
-                    Log.d("q",query);
                     printmyquery(query);
                 } catch (JSONException e) {
                     menuItem.setActionView(null);
@@ -83,12 +100,12 @@ public class ClassifyText extends AsyncTask<String, Void, String> {
 
     private void printmyquery(String c) {
 
-        Log.d("qqqqqqqqqqqq",c);
         c =c.replaceAll("[ ](?=[ ])|[^_+,A-Za-z0-9 ]+", "");
         c =c.replaceAll("\\band\\b\\s*", "");
         //Toast.makeText(context, ""+c, Toast.LENGTH_SHORT).show();
         c=c.replaceAll(" ","%20");
         c=c.replaceAll("\n","%20");
+        Log.d("query",c);
         new FetchMusic(context, c, menuItem).execute();
     }
 }

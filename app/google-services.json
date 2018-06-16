@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "540341261426",
+    "firebase_url": "https://busics-5bfc3.firebaseio.com",
+    "project_id": "busics-5bfc3",
+    "storage_bucket": "busics-5bfc3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540341261426:android:932098fe61056c67",
+        "android_client_info": {
+          "package_name": "com.example.dakshi.busic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "540341261426-tn3mvtu7utvtlr7t4stseemsj9p47ah6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dakshi.busic",
+            "certificate_hash": "bb237fdfc32b1e556faae837d57edfa17113026d"
+          }
+        },
+        {
+          "client_id": "540341261426-hpiiisl9nl8sse90tgdpip9rrqtqjvf0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWTUfVh5CXFUfIpoURymypcWWfJ58ss-w"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "540341261426-hpiiisl9nl8sse90tgdpip9rrqtqjvf0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

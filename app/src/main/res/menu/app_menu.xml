@@ -4,23 +4,30 @@
 
 
     <item
+        android:id="@+id/action_signout"
+        android:orderInCategory="100"
+        android:icon="@drawable/ic_if_cross_214654"
+        android:title="Sign Out"
+        app:showAsAction="never">
+    </item>
+    <item
         android:id="@+id/action_choose"
         android:orderInCategory="100"
         android:icon="@drawable/ic_if_file_pdf_383140"
-        android:title="Refresh"
+        android:title="Select File"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_close"
         android:orderInCategory="100"
         android:icon="@drawable/ic_if_cross_214654"
-        android:title="Close"
-        app:showAsAction="always">
+        android:title="Exit"
+        app:showAsAction="never">
     </item>
     <item
         android:id="@+id/action_refresh"
         android:orderInCategory="100"
         android:icon="@drawable/refresh"
-        android:title="Close"
+        android:title="Refresh"
         app:showAsAction="always">
     </item>
 

@@ -8,15 +8,17 @@
     tools:context="com.example.dakshi.busic.MainActivity">
 
 
+
     <android.support.v7.widget.Toolbar xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
     </android.support.v7.widget.Toolbar>
+
+
     <com.github.barteksc.pdfviewer.PDFView
         android:id="@+id/pdfView"
         android:layout_width="match_parent"
@@ -27,8 +29,25 @@
         android:keepScreenOn="true"
         android:clickable="true"
         android:focusable="auto"
-        android:visibility="invisible"
-        android:padding="5dp" />
+        android:padding="5dp" >
+        <TextView
+            android:layout_width="20dp"
+            android:id="@+id/textview"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:layout_height="20dp" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@drawable/like"
+            app:backgroundTint="@color/app_light" />
+
+    </com.github.barteksc.pdfviewer.PDFView>
 
     <RelativeLayout
         android:id="@+id/child_rel_view"
